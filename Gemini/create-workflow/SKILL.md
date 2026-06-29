@@ -66,10 +66,31 @@ This creates in `/home/gitonga/Develop/PGAFF/repos/wt/wt-<name>/`:
 
 Then edit `spec.yaml` to add the workflow-specific tasks based on requirements gathered above.
 
-## Step 5: Verify
+## Step 5: Post-scaffold cleanup
+
+The scaffold creates a `dev/` directory — delete it:
+```bash
+rm -rf /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS/dev/
+```
+
+Copy CI workflows from `wt-custom-events` (the scaffold does not add these):
+```bash
+cp /home/gitonga/Develop/PGAFF/repos/wt/wt-custom-events/.github/workflows/ci.yml \
+   /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS/.github/workflows/ci.yml
+cp /home/gitonga/Develop/PGAFF/repos/wt/wt-custom-events/.github/workflows/tag.yml \
+   /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS/.github/workflows/tag.yml
+```
+
+## Step 6: Compile and verify
 
 ```bash
-cd /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS && wt-compiler compile --spec spec.yaml --pkg-name-prefix=ecoscope-workflows --results-env-var=ECOSCOPE_WORKFLOWS_RESULTS --clobber && ./dev/pytest-cli.sh $ARGUMENTS --case base --local --quiet
+cd /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS && wt-compiler compile --spec spec.yaml --pkg-name-prefix=ecoscope-workflows --results-env-var=ECOSCOPE_WORKFLOWS_RESULTS --clobber
+```
+
+After recompile, audit `params.json` for fields with `"default": null` AND `"type": "string"` — patch each to `"anyOf": [{"type": "string"}, {"type": "null"}]` so the UI can send explicit nulls.
+
+```bash
+pixi run --manifest-path ecoscope-workflows-$ARGUMENTS-workflow/pixi.toml --locked -e test test-app-sequential-mock-io
 ```
 
 ## Supervision Checkpoints
