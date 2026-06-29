@@ -44,10 +44,12 @@ After changes, compile:
 cd /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS && wt-compiler compile --spec spec.yaml --pkg-name-prefix=ecoscope-workflows --results-env-var=ECOSCOPE_WORKFLOWS_RESULTS --clobber --update
 ```
 
+After recompile, audit `params.json` for fields with `"default": null` AND `"type": "string"` — patch each to `"anyOf": [{"type": "string"}, {"type": "null"}]` so the UI can send explicit nulls without failing validation.
+
 ### 4. Update test-cases.yaml
 Add/modify test parameters for new functionality. Run tests:
 ```bash
-cd /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS && ./dev/pytest-cli.sh $ARGUMENTS --case <case-name> --local --quiet
+pixi run --manifest-path /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS/ecoscope-workflows-$ARGUMENTS-workflow/pixi.toml --locked -e test test-app-sequential-mock-io
 ```
 Note: the rjsf override in spec.yaml does not affect params in test-cases.yaml
 
@@ -65,7 +67,8 @@ User updates `resources/templates/*.docx` manually. Wait for confirmation.
 
 ### 9. Final Verification
 ```bash
-cd /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS && ./dev/pytest-cli.sh $ARGUMENTS --all --local --quiet && git status && git diff
+pixi run --manifest-path /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS/ecoscope-workflows-$ARGUMENTS-workflow/pixi.toml --locked -e test test-app-sequential-mock-io
+git -C /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS status && git -C /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS diff
 ```
 
 Summarize changes for user.

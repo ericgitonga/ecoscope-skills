@@ -68,6 +68,8 @@ If there are uncommitted changes on the branch, ask the user if they want to com
 
 ### 3. Update task libraries to latest main
 
+> **Skip this step for wt repos that depend on `ecoscope-platform` directly** (e.g. those compiled with wt-compiler using ecoscope-platform 2.13.0+). Steps 3–5 apply only to workflows using `ecoscope-workflows-core` / `ext-ecoscope` / `ext-custom` packages.
+
 ```bash
 # ecoscope-workflows (compiler + core tasks)
 cd /home/gitonga/Develop/PGAFF/repos/ecoscope-workflows && git checkout main && git pull
@@ -142,11 +144,13 @@ Then commit everything:
 git add -A && git commit -m "chore: bump version to $MAJ.$MIN.$PATCH and recompile"
 ```
 
-### 8. Update and test in ecoscope-workflows
+### 8. Test workflow
 
 ```bash
-bash -ic 'cd /home/gitonga/Develop/PGAFF/repos/ecoscope-workflows && pixi update && pixi run bash -c "./dev/pytest-cli.sh $ARGUMENTS --all --quiet"'
+pixi run --manifest-path /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS/ecoscope-workflows-$ARGUMENTS-workflow/pixi.toml --locked -e test test-app-sequential-mock-io
 ```
+
+Also audit `params.json` for fields with `"default": null` AND `"type": "string"` after any recompile — patch each to `"anyOf": [{"type": "string"}, {"type": "null"}]` before committing.
 
 ### 9. Create GitHub repo (first publish only)
 
@@ -192,38 +196,44 @@ EOF
 )"
 ```
 
-Return the PR URL to the user. **Stop here.** The user merges manually after testing.
+Return the PR URL to the user with this exact message:
 
-### 11. Tag, release, and update local — wait for user go-ahead
+> PR is open: `<url>` — merge when ready and let me know with **"Merge done"** (or similar) and I'll immediately pull main, verify the release, and clean up the local branch.
 
-After returning the PR URL, **do not proceed further**. Wait for the user to confirm the PR has been merged, then ask:
+**Stop here. Do not proceed.** The user reviews, tests, and merges the PR manually.
 
-> The PR is merged — shall I tag `v$MAJ.$MIN.$PATCH`, create the GitHub Release, and update your local repo?
+### 11. Tag, release, and cleanup — triggered by user confirmation
 
-Only proceed when they say yes. Then run:
+When the user says the PR has been merged (any phrasing: "merged", "merge done", "done", etc.) **immediately and without asking for further confirmation**, run:
 
 ```bash
 GH=/home/gitonga/miniforge3/envs/pgaff/bin/gh
 
+# Pull merged changes
 git checkout main && git pull origin main
 
-# Create annotated tag
+# Check if tag.yml already created the release (it runs automatically on merge)
+$GH release list --repo $ORG/wt-$ARGUMENTS | head -5
+```
+
+If `v$MAJ.$MIN.$PATCH` already appears in the release list (created by `tag.yml`), skip tag creation and confirm the release exists.
+
+If the release does NOT exist, create it manually:
+```bash
 git tag v$MAJ.$MIN.$PATCH
 git push origin v$MAJ.$MIN.$PATCH
-
-# Create GitHub Release from the tag (this is what shows in the Releases panel)
 $GH release create v$MAJ.$MIN.$PATCH \
   --repo $ORG/wt-$ARGUMENTS \
   --title "v$MAJ.$MIN.$PATCH" \
   --generate-notes
 ```
 
-Confirm the release is visible at `https://github.com/$ORG/wt-$ARGUMENTS/releases`.
-
 Then delete the local branch:
 ```bash
 git branch -d er/$BRANCH_NAME
 ```
+
+Report the release URL to the user and confirm cleanup is complete.
 
 ## Technical Guide
 

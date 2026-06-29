@@ -56,10 +56,31 @@ cd /home/gitonga/Develop/PGAFF/repos/wt && wt-compiler scaffold init --no-intera
 If published custom tasks are needed, add them as an additional `--requirements` entry with their
 channel and version.
 
-### Step 5A: Verify
+### Step 5A: Post-scaffold cleanup
+
+The scaffold creates a `dev/` directory — delete it:
+```bash
+rm -rf /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS/dev/
+```
+
+Copy CI workflows from `wt-custom-events` (the scaffold does not add these):
+```bash
+cp /home/gitonga/Develop/PGAFF/repos/wt/wt-custom-events/.github/workflows/ci.yml \
+   /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS/.github/workflows/ci.yml
+cp /home/gitonga/Develop/PGAFF/repos/wt/wt-custom-events/.github/workflows/tag.yml \
+   /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS/.github/workflows/tag.yml
+```
+
+### Step 6A: Compile and verify
 
 ```bash
-cd /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS && wt-compiler compile --spec spec.yaml --pkg-name-prefix=ecoscope-workflows --results-env-var=ECOSCOPE_WORKFLOWS_RESULTS --clobber && ./dev/pytest-cli.sh $ARGUMENTS --case base --local --quiet
+cd /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS && wt-compiler compile --spec spec.yaml --pkg-name-prefix=ecoscope-workflows --results-env-var=ECOSCOPE_WORKFLOWS_RESULTS --clobber
+```
+
+After recompile, audit `params.json` for fields with `"default": null` AND `"type": "string"` — patch each to `"anyOf": [{"type": "string"}, {"type": "null"}]` so the UI can send explicit nulls.
+
+```bash
+pixi run --manifest-path ecoscope-workflows-$ARGUMENTS-workflow/pixi.toml --locked -e test test-app-sequential-mock-io
 ```
 
 ---
@@ -95,6 +116,19 @@ cd /home/gitonga/Develop/PGAFF/repos/wt && wt-compiler scaffold init --no-intera
   --output-dir . \
   --requirements '{"name":"ecoscope-platform","version":">=2.11.0,<3","channel":"https://repo.prefix.dev/ecoscope-workflows/"}' \
   && [ -d "$WORKFLOW_ID" ] && mv "$WORKFLOW_ID" "wt-$ARGUMENTS" || true
+```
+
+Delete the `dev/` directory the scaffold creates (not part of canonical structure):
+```bash
+rm -rf /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS/dev/
+```
+
+Copy CI workflows from `wt-custom-events`:
+```bash
+cp /home/gitonga/Develop/PGAFF/repos/wt/wt-custom-events/.github/workflows/ci.yml \
+   /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS/.github/workflows/ci.yml
+cp /home/gitonga/Develop/PGAFF/repos/wt/wt-custom-events/.github/workflows/tag.yml \
+   /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS/.github/workflows/tag.yml
 ```
 
 ### Step 4B: Create the tasks package
@@ -197,10 +231,14 @@ Verify no absolute paths leaked into the lock file:
 grep "/home/" pixi.lock  # should return nothing
 ```
 
-### Step 9B: Verify
+### Step 9B: Audit params.json for nullable fields
+
+After compile, check for fields with `"default": null` AND `"type": "string"` in `params.json` — these reject explicit nulls from the UI. Patch each to `"anyOf": [{"type": "string"}, {"type": "null"}]`.
+
+### Step 10B: Verify
 
 ```bash
-cd /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS && ./dev/pytest-cli.sh $ARGUMENTS --case base --local --quiet
+pixi run --manifest-path /home/gitonga/Develop/PGAFF/repos/wt/wt-$ARGUMENTS/ecoscope-workflows-<name>-workflow/pixi.toml --locked -e test test-app-sequential-mock-io
 ```
 
 ---

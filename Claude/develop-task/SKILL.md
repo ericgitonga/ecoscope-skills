@@ -67,7 +67,7 @@ Read `/home/gitonga/Develop/PGAFF/repos/ecoscope-skills/references/ecoscope-task
    from pydantic import Field
    from wt_registry import register
 
-   @register(title="My Task", description="Brief description of what this task does.")
+   @register(description="Brief description of what this task does.")
    def my_task(
        param: Annotated[str, Field(description="Description here.")],
    ) -> ReturnType:
@@ -155,7 +155,8 @@ bash -ic 'cd <library-path> && condpg && pytest tests/tasks/test_my_task.py -v'
 
 3. **Compile and run**:
    ```bash
-   cd /home/gitonga/Develop/PGAFF/repos/wt/<workflow-repo> && wt-compiler compile --spec spec.yaml --pkg-name-prefix=ecoscope-workflows --results-env-var=ECOSCOPE_WORKFLOWS_RESULTS --clobber --update && ./dev/pytest-cli.sh <workflow-name> --case base --local --quiet
+   cd /home/gitonga/Develop/PGAFF/repos/wt/<workflow-repo> && wt-compiler compile --spec spec.yaml --pkg-name-prefix=ecoscope-workflows --results-env-var=ECOSCOPE_WORKFLOWS_RESULTS --clobber --update
+   pixi run --manifest-path ecoscope-workflows-<name>-workflow/pixi.toml --locked -e test test-app-sequential-mock-io
    ```
 
 4. **Verify the task output** in the test results.
