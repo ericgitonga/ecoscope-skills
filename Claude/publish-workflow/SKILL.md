@@ -225,6 +225,27 @@ Then delete the local branch:
 git branch -d er/$BRANCH_NAME
 ```
 
+## Technical Guide
+
+If this workflow does not yet have a `docs/technical_guide.pdf`, generate one before
+pushing the PR. Use the `generate-tech-guide` skill:
+
+```
+/generate-tech-guide $ARGUMENTS
+```
+
+Or run the steps manually — see `Claude/generate-tech-guide/SKILL.md` for the full
+procedure. Key points:
+
+- Use **ReportLab** via `conda run -n ds python docs/generate_technical_guide.py`
+- Never use weasyprint
+- The script lives at `docs/generate_technical_guide.py` alongside the PDF
+- README must link to `docs/technical_guide.pdf`
+
+If a guide already exists and the workflow logic has not changed, skip this step.
+If workflow logic changed (new tasks, new outputs), regenerate the PDF and commit
+the updated script and PDF in the same PR.
+
 ## Version files checklist
 
 Every publish must update **all** of the following before committing:

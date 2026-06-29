@@ -186,8 +186,31 @@ conda run -n pgaff gh release create v$MAJ.$MIN.$PATCH \
 
 Confirm the release is visible at `https://github.com/$ORG/wt-$ARGUMENTS/releases`, then tell the user the local repo is up to date.
 
+## Technical Guide
+
+If this workflow does not yet have a `docs/technical_guide.pdf`, generate one before
+pushing the PR. Use the `generate-tech-guide` skill:
+
+```
+/generate-tech-guide $ARGUMENTS
+```
+
+Or run the steps manually — see `Gemini/generate-tech-guide/SKILL.md` for the full
+procedure. Key points:
+
+- Use **ReportLab** via `conda run -n ds python docs/generate_technical_guide.py`
+- Never use weasyprint
+- The script lives at `docs/generate_technical_guide.py` alongside the PDF
+- README must link to `docs/technical_guide.pdf`
+
+If a guide already exists and the workflow logic has not changed, skip this step.
+If workflow logic changed (new tasks, new outputs), regenerate the PDF and commit
+the updated script and PDF in the same PR.
+
 ## Notes
 - Version format: `>=X.Y.Z, <X.Y+1.0` (semver compatible range)
 - Always verify the workflow compiles successfully before pushing
 - Check for breaking changes in task library updates
 - Branch prefix is always `er/` — never push changes directly to `main`
+- If a release already exists for a tag (e.g. created by GitHub on merge), skip `gh release create`
+  and verify with `conda run -n pgaff gh release list --repo $ORG/wt-$ARGUMENTS`
