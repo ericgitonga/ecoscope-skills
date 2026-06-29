@@ -1,0 +1,24 @@
+workflows_dir: /home/gitonga/Develop/PGAFF/repos/wt
+reference: wt-download-events
+
+sync_dirs:
+  - .github/workflows
+  - dev
+
+sync_files:
+  - .gitattributes
+  - .gitignore
+  - .pre-commit-config.yaml
+  - LICENSE
+  # - README.md  # each repo has its own
+
+workflows:
+  - wt-download-events
+  - wt-download-patrols
+  - wt-download-subjects
+  - wt-climate-monitoring
+  - wt-hydrological-monitoring
+  - wt-ndvi
+  # - wt-trajectory-map               # excluded: temp workflow
+  # wt-mara-triangle-monthly-report   # excluded: older structure
+  # wt-template                       # excluded: template only
